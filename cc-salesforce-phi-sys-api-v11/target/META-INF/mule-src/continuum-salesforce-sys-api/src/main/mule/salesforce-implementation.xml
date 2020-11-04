@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	<flow name="salesforce-query-protocol-group-flow" doc:id="5e7ba281-5632-48b1-ba8b-c796792eff26" >
+		<json-logger:logger doc:name="LOG INFO - Calling Salesforce Protocol Group" doc:id="ecd7a15c-b273-424d-aaba-84284f30b30f" config-ref="JSON_Logger_Configuration" message="Starting The Salesforce Protocol Group" category="com.mulesoft.logging.jsonlogger">
+			<json-logger:content ><![CDATA[#[output application/json 
+---
+payload]]]></json-logger:content>
+		</json-logger:logger>
+		<salesforce:query doc:name="Querying Protocol Group" doc:id="90997519-f34e-4f12-a0f1-a50dc0b47566" config-ref="Salesforce_PHI_Configuration">
+			<reconnect frequency="${reconnection.frequency}" count="${reconnection.attempts}" />
+			<salesforce:salesforce-query><![CDATA[:statement]]></salesforce:salesforce-query>
+			<salesforce:parameters><![CDATA[#[output application/java
+---
+{
+	"statement" : p("query.protocol_grp")
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<ee:transform doc:name="DW Response From Protocol Group" doc:id="712f5ede-5cd5-4d15-8175-6aa997f2236b">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="LOG INFO - Payload From Protocol Group" doc:id="a8969ab5-e98f-4dc2-a766-cba6a87b0696" config-ref="JSON_Logger_Configuration" message="Ending The Salesforce Protocol Group" tracePoint="END" category="com.mulesoft.logging.jsonlogger">
+			<json-logger:content><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+		</json-logger:logger>
+	</flow>
+	<flow name="salesforce-query-integration-mapping-flow" doc:id="87b5aa81-f68b-443b-a2c7-70dacc67eea3" >
+		<json-logger:logger doc:name="LOG INFO - Calling Salesforce Query Integration" doc:id="315abb35-4963-4c0e-8785-b50f6098f7f1" config-ref="JSON_Logger_Configuration" message="Starting The Salesforce Query Integration" category="com.mulesoft.logging.jsonlogger">
+			<json-logger:content ><![CDATA[#[output application/json 
+---
+payload]]]></json-logger:content>
+		</json-logger:logger>
+		<salesforce:query doc:name="Querying Query Integration" doc:id="21cb3b68-0ad6-4640-a911-c8e3a843b200" config-ref="Salesforce_PHI_Configuration">
+			<reconnect frequency="${reconnection.frequency}" count="${reconnection.attempts}" />
+			<salesforce:salesforce-query><![CDATA[SELECT Id, Protocol_Group__r.Id, Query_String__c FROM Integration_Mapping__c WHERE Protocol_Group__r.Id IN :ProtocolGroupIDs AND Screener_Status__c = 'Active']]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[output application/java
+---
+{
+	ProtocolGroupIDs : payload
+}]]]></salesforce:parameters>
+		
+</salesforce:query>
+		<ee:transform doc:name="DW Response From Query Integration" doc:id="835f5c9c-08c5-4854-8f63-798ffc7f7417">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="LOG INFO - Payload From Query Integration" doc:id="d223c32c-b3ba-4432-8e27-d972b02d34fe" config-ref="JSON_Logger_Configuration" message="Ending The Salesforce Query Integration" tracePoint="END" category="com.mulesoft.logging.jsonlogger">
+			<json-logger:content><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+		</json-logger:logger>
+	</flow>
+	<flow name="salesforce-upsert-flow" doc:id="962a287b-dd52-4df5-be30-c9b21e1be9e5" >
+		<json-logger:logger doc:name="LOG INFO - Calling Salesforce Participant Lead" doc:id="072ea611-9aac-4cb0-9fb5-3801e68852d8" config-ref="JSON_Logger_Configuration" message="Starting The Salesforce Participant Lead" category="com.mulesoft.logging.jsonlogger">
+			<json-logger:content ><![CDATA[#[output application/json 
+---
+payload]]]></json-logger:content>
+		</json-logger:logger>
+		<logger level="INFO" doc:name="Logger" doc:id="ec04f08c-1abd-4943-810d-6e8f3392d425" message="#['BEFORE PAYLOAD HERE: ' ++ write(payload)]"/>
+		<try doc:name="Try" doc:id="1f0feec3-ac1e-4950-aa6b-4df8bebd2bdb" >
+			<salesforce:upsert objectType="Participant_Lead__c" externalIdFieldName="Screener_Profile_ID__c" doc:name="Upsert In Participant Lead" doc:id="1e41cfc1-6e61-4272-8e92-7d637a21b56e" config-ref="Salesforce_PHI_Configuration">
+			<reconnect frequency="${reconnection.frequency}" count="${reconnection.attempts}" />
+		</salesforce:upsert>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="dda0b505-0657-4a12-86ac-65160734e935" type="SALESFORCE:INVALID_INPUT, SALESFORCE:INVALID_RESPONSE, SALESFORCE:LIMIT_EXCEEDED, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<json-logger:logger doc:name="LOG INFO -  Error In Salesforce Participant Lead " doc:id="7733769b-0a25-4c7d-a82f-f465c05d3207" config-ref="JSON_Logger_Configuration" message="Error Occurred In Salesforce Upsert In Participant Lead" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+						<json-logger:content ><![CDATA[#[output application/json 
+---
+payload]]]></json-logger:content>
+					</json-logger:logger>
+					<set-payload value='#[%dw 2.0
+output application/json
+---
+{
+	"timeStamp" : now(),
+	"transactionId": correlationId,
+	"errorDescription" : error.description,
+	"errorCause" : error.cause.message,
+	"errorCode" : 500,
+}]' doc:name="Set Payload" doc:id="08e1c00e-45ae-4edd-b2e4-f6c2944d8fcf" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="DW Response From Participant Lead" doc:id="ef480117-8932-488f-99db-662350e0676f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="LOG INFO - Payload From Participant Lead" doc:id="6b48298c-7002-47c0-89b1-b2df6f2623f8" config-ref="JSON_Logger_Configuration" message="Ending The Salesforce Participant Lead" tracePoint="END" category="com.mulesoft.logging.jsonlogger">
+			<json-logger:content><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+		</json-logger:logger>
+	</flow>
+	<flow name="get-partner-participant-lead" doc:id="078f7645-7911-4a4c-8a6f-42889c5712fa" >
+		<logger level="INFO" doc:name="Logger" doc:id="57bba66d-ccea-4cba-b1e3-727268ac0a1e" message="#[attributes]"/>
+		<salesforce:query doc:id="ef46833c-286c-4312-866b-4bb4fd9d7601" config-ref="Salesforce_PHI_Configuration">
+			<salesforce:salesforce-query ><![CDATA[SELECT Screener_Profile_ID__c,Contacted__c,Reached__c,Scheduled__c,Current_Appointment_Scheduled_Date__c,Attended_V1__c,Screen_Failed__c,Screen_Failed_Date__c,Randomized__c,Randomized_Date__c,Inactive_Referral__c FROM Participant_Lead__c WHERE Screener_Profile_ID__c = :Screener_Profile_ID]]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[{
+	"Screener_Profile_ID" : attributes.queryParams.'screener-profile-id'
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<logger level="INFO" doc:name="Logger" doc:id="78409b9d-fe90-40e2-9d61-284910b80d39" message="#[output application/json
+---
+payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="16f426fd-562a-423e-9eff-6e0a48092e47" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="update-partner-participant-lead" doc:id="cef5c744-75e8-4826-84e8-b111f79061fd" >
+		<ee:transform doc:name="DW Mapping For Request Payload" doc:id="2e04b72d-9f9e-4117-b2cf-d5441645080f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map {
+"Screener_Profile_ID__c": $.Screener_Profile_ID__c,
+"Inquiry_Date__c": $.Inquiry_Date__c,
+"Referral__c": $.Referral__c,
+"Referral_Date__c": $.Referral_Date__c,
+"Protocol__c": $.Protocol__c,
+"First_Name__c": $.First_Name__c,
+"Last_Name__c": $.Last_Name__c,
+"Screener_Source__c": $.Screener_Source__c,
+"Zip_Postal_Code__c": $.Zip_Postal_Code__c,
+"Country__c": $.Country__c,
+"Permission_to_Text_Primary__c": $.Permission_to_Text_Primary__c,
+"Permission_to_Leave_Voicemail_Primary__c": $.Permission_to_Leave_Voicemail_Primary__c,
+"Email__c": $.Email__c,
+"Middle_Name__c": $.Middle_Name__c,
+"Gender__c": $.Gender__c,
+"ParticipantAge__c": $.ParticipantAge__c,
+
+}
+
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:upsert doc:name="Upsert Data In Participant Lead" doc:id="bdfcd94f-b85c-4459-b655-6dd506a602bd" config-ref="Salesforce_PHI_Configuration" objectType="Participant_Lead__c" externalIdFieldName="Screener_Profile_ID__c"/>
+		<ee:transform doc:name="DW Mapping For Success Upsert Response" doc:id="3e04bdc3-9000-4be7-b2a7-6c0d9ca69d49" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	
+</mule>

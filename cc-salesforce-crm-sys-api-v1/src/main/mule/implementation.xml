@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="salesforce-upsert-media-tactic-flow" doc:id="3efc785d-1ada-41c7-a610-1bb1cf1bd52f" >
+		<logger level="INFO" doc:name="Logger" doc:id="135b4e8e-aebe-4a89-996a-6b1b29232332" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="6f919db8-da67-4917-a9b8-d8c598fa181e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map ({
+    Country__c : $.country,
+    Protocol_Group_Name__c : $.protocol_group,
+    AppointmentsProjected__c : $.projected_appointments,
+    RandomizedProjected__c : $.projected_randomized,
+    ReferralsProjected__c : $.projected_referrals,
+    Screened_Projected__c : $.projected_screened,
+    MediaTacticID__c : $.me
+})]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Copy_of_Logger" doc:id="2de6d990-83d2-4239-bd16-a853c00014ba" message="after transform #[payload]" />
+		<salesforce:upsert doc:name="Upsert" doc:id="8e3b86ba-c81f-4add-830c-7ff69b663fae" config-ref="Salesforce_Config_CRM" objectType="Media_Tactic__c" externalIdFieldName="MediaTacticID__c">
+			<reconnect frequency="${reconnection.frequency}" count="${reconnection.attempts}" />
+		</salesforce:upsert>
+		<ee:transform doc:name="Transform Message" doc:id="60da9924-4f1a-4100-b9d2-5420860257a5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

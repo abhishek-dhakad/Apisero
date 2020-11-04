@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:spring="http://www.mulesoft.org/schema/mule/spring"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub" xmlns:crypto="http://www.mulesoft.org/schema/mule/crypto" xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/crypto http://www.mulesoft.org/schema/mule/crypto/current/mule-crypto.xsd
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<http:listener-config name="HTTPS_Listener_Configuration">
+        <http:listener-connection host="0.0.0.0" port="8082" protocol="HTTPS">
+			<tls:context >
+				<tls:key-store type="jks" path="server-keystore.jks" alias="mulesoft" keyPassword="${secure::https.tls.keyPassword}" password="${secure::https.tls.password}" />
+			</tls:context>
+		</http:listener-connection>
+    </http:listener-config>
+    <apikit:config name="cc-salesforce-crm-system-api-config" api="cc-salesforce-crm-system-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    
+	<json-logger:config name="JSON_Logger_Configuration" doc:name="JSON Logger Config" doc:id="4150bd30-f1af-4f03-93e4-ee5f48ef8529" environment="${mule.env}"/>
+	<configuration-properties doc:name="JSON_logger_Configuration_Properties" doc:id="a2152536-3611-462b-b434-283c56ff3818" file="json-logger.properties" />
+	<cloudhub:config name="CloudHub_Configuration" doc:name="CloudHub Config" doc:id="1eab6892-3bd7-4a02-9ab2-23d2889110ec" >
+		<cloudhub:connection username="${secure::cloudhub.username}" password="${secure::cloudhub.password}" environment="${secure::cloudhub.env_id}" />
+	</cloudhub:config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="d4daa9bb-e640-48ec-9c38-e050d8bb5dd0" >
+		<email:smtp-connection host="${secure::email.host}" port="${secure::email.port}" user="${secure::email.username}" password="${secure::email.password}" >
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+				<email:property key="mail.smtp.ssl.trust" value="smtp.gmail.com" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	<salesforce:sfdc-config name="Salesforce_Config_CRM" doc:name="Salesforce Config" doc:id="e252345b-2d5e-4174-8c5a-82601e9592af" >
+		<salesforce:jwt-connection consumerKey="${secure::sfdc.crm.consumerkey}" keyStore="mule_crm_${mule.env}.jks" storePassword="${secure::sfdc.crm.keystorepassword}" principal="${secure::sfdc.crm.principal}" tokenEndpoint="${secure::sfdc.crm.token}" >
+			<reconnection >
+				<reconnect />
+			</reconnection>
+		</salesforce:jwt-connection>
+	</salesforce:sfdc-config>
+	<spring:config name="Spring_Config" doc:name="Spring Config" doc:id="e9a1dd8e-cd26-4085-9a42-8ab79cf39484" files="bean.xml" />
+	<spring:security-manager doc:name="Spring Security manager" doc:id="3394c002-67ed-4e21-94d3-c1d715303f49" >
+		<spring:delegate-security-provider name="continuum-clinical" delegate-ref="authenticationManager" />
+	</spring:security-manager>
+	
+	<validation:config name="Auth_Validation_Config" doc:name="Validation Config" doc:id="ee097f6e-0208-4994-8462-9ba7176c236a" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="903c24e0-0187-47e8-a3c7-376ffdae2a49" file="configurations\continuum-salesforce-crm-sys-api-${mule.env}.yaml" key="${secure.key}" fileLevelEncryption="true" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+</mule>

@@ -1,0 +1,87 @@
+#%RAML 1.0
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/a70cae71-1d35-4b09-8ebd-6b621df6fc93/ # 
+title: continuum-salesforce-phi-sys-api
+description: This is the Salesforce system API for all salesforce operations.
+version: v1
+
+traits:
+  client-id-required:
+    headers:
+      client_id:
+        type: string
+      client_secret:
+        type: string
+    responses:
+      401:
+        description: Unauthorized or invalid client application credentials
+      500:
+        description: Bad response from authorization server, or WSDL SOAP Fault error
+
+/sf_query:
+  /partner:
+    /participant-lead:
+      description: "Goes to the PHI Org Sys API"
+      is: [client-id-required]
+      get:
+        description: "Get the details for the Updates on a list of referrals"
+        queryParameters:
+          screener-profile-id:
+            type: string
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/query-partner-participant-lead-response.raml
+  /protocol_group:
+    description: Retrieve the data from protocol_group object.
+    is: [client-id-required]
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              examples: !include examples/query-protocol_group-response.raml
+  /integration_mapping:
+    description: Retrieve the data from integration_mapping object.
+    is: [client-id-required]
+    get:
+      queryParameters:
+        protocol_group_ids:
+          required: true
+      responses:
+        200:
+          body:
+            application/json:
+              examples: !include examples/query-integration_mapping-response.raml
+
+/sf_upsert:
+  is: [client-id-required]
+  /partner:
+    /participant_lead:
+      description: Performs the upsert operation in participant_lead object.
+      is: [client-id-required]
+      post:
+        body:
+          application/json:
+            examples: !include examples/upsert-partner-participant-lead-request.raml
+        responses:
+          200:
+            body:
+              application/json:
+                examples: !include examples/upsert-partner-participant-lead-response.raml
+  /participant_lead:
+    description: Performs the upsert operation in participant_lead object.
+    is: [client-id-required]
+    post:
+      body:
+        application/json:
+          examples:
+            request: !include examples/upsert-participant_lead-request.raml
+      responses:
+        200:
+          body:
+            application/json:
+              examples:
+                response: !include examples/upsert-participant_lead-response.raml
+  
+

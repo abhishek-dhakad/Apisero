@@ -1,0 +1,4 @@
+{
+  "minMuleVersion": "4.3.0",
+  "secureProperties": ["secure::sfdc.phi.username", "secure::sfdc.phi.password", "secure::sfdc.phi.securityToken","secure::notification.custom_alert", "secure::auth.client_id", "secure::auth.client_secret", "secure::application.runtime.key"]
+}

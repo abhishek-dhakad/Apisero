@@ -1,0 +1,77 @@
+{
+  "configs": [
+    "api.xml",
+    "global-error.xml",
+    "salesforce-implementation.xml",
+    "common-config.xml"
+  ],
+  "secureProperties": [
+    "secure::sfdc.phi.username",
+    "secure::sfdc.phi.password",
+    "secure::sfdc.phi.securityToken",
+    "secure::notification.custom_alert",
+    "secure::auth.client_id",
+    "secure::auth.client_secret",
+    "secure::application.runtime.key"
+  ],
+  "redeploymentEnabled": true,
+  "name": "com.mycompany:continuum-salesforce-sys-api:1.0.0-SNAPSHOT",
+  "minMuleVersion": "4.3.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "api/cc-salesforce-phi-system-api.raml",
+        "api/examples/query-integration_mapping-response.raml",
+        "api/examples/query-partner-participant-lead-response.raml",
+        "api/examples/query-protocol_group-response.raml",
+        "api/examples/upsert-participant_lead-request.raml",
+        "api/examples/upsert-participant_lead-response.raml",
+        "api/examples/upsert-partner-participant-lead-request.raml",
+        "api/examples/upsert-partner-participant-lead-response.raml",
+        "api.xml",
+        "application-types.xml",
+        "bean.xml",
+        "common-config.xml",
+        "configuration/continuum-file-salesforce-phi-sys-api-qa.yaml",
+        "configuration/continuum-file-salesforce-phi-sys-api-staging.yaml",
+        "configuration/continuum-salesforce-phi-sys-api-dev.yaml",
+        "configuration/continuum-salesforce-phi-sys-api-prod.yaml",
+        "configuration/continuum-salesforce-phi-sys-api-qa.yaml",
+        "configuration/continuum-salesforce-phi-sys-api-staging.yaml",
+        "emailTemplate.html",
+        "global-error.xml",
+        "json-logger.properties",
+        "log4j2.xml",
+        "mule_phi_ethosdev.crt",
+        "mule_phi_ethosdev.jks",
+        "mule_phi_prod.crt",
+        "mule_phi_prod.jks",
+        "mule_phi_qa.crt",
+        "mule_phi_qa.jks",
+        "mule_phi_staging.crt",
+        "mule_phi_staging.jks",
+        "pgp/PublicKey.asc",
+        "pgp/SecretKey.asc",
+        "salesforce-implementation.xml",
+        "salesforce-queries.yaml",
+        "server-keystore.jks",
+        "ssl/mule_phi_ethosdev.crt",
+        "ssl/mule_phi_ethosdev.jks",
+        "ssl/mule_phi_prod.crt",
+        "ssl/mule_phi_prod.jks",
+        "ssl/mule_phi_qa.crt",
+        "ssl/mule_phi_qa.jks",
+        "ssl/mule_phi_staging.crt",
+        "ssl/mule_phi_staging.jks",
+        "ssl/server-keystore.jks"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}

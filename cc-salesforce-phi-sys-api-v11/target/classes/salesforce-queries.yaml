@@ -1,0 +1,2 @@
+query:
+  protocol_grp: SELECT Id, Name,Postgres_Schema_Name__c FROM Protocol_Group__c WHERE Status__c = 'Open' AND Postgres_Schema_Name__c != ''

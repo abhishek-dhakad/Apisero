@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:spring="http://www.mulesoft.org/schema/mule/spring"
+	xmlns:crypto="http://www.mulesoft.org/schema/mule/crypto"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub" xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd 
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/crypto http://www.mulesoft.org/schema/mule/crypto/current/mule-crypto.xsd
+http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd">
+	<salesforce:sfdc-config name="Salesforce_PHI_Configuration" doc:name="Salesforce Config" doc:id="28749d92-9bd1-4c9c-af18-20bd9ab88d31" >
+		<salesforce:jwt-connection consumerKey="${secure::sfdc.phi.consumerkey}" keyStore="mule_phi_${mule.env}.jks" storePassword="${secure::sfdc.phi.keystorepassword}" principal="${secure::sfdc.phi.principal}" tokenEndpoint="${secure::sfdc.phi.token}" />
+	
+</salesforce:sfdc-config>
+	<apikit:config name="cc-salesforce-phi-system-api-config" api="cc-salesforce-phi-system-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+   
+	<http:listener-config name="HTTPS_Listener_Configuration">
+        <http:listener-connection host="0.0.0.0" port="8082" protocol="HTTPS">
+			<tls:context >
+				<tls:key-store type="jks" path="server-keystore.jks" alias="mulesoft" keyPassword="${secure::https.tls.keyPassword}" password="${secure::https.tls.password}" />
+			</tls:context>
+		</http:listener-connection>
+    </http:listener-config>
+	<configuration-properties doc:name="Salesforce_Queries_Configuration_Properties" doc:id="8993eb12-7e3c-4126-a724-79d4e6b09d1d" file="salesforce-queries.yaml" />
+	<configuration-properties doc:name="JSON_logger_Configuration_Properties" doc:id="c9e52b4d-fe13-49f3-99d2-6dc43a56b618" file="json-logger.properties" />
+	<json-logger:config name="JSON_Logger_Configuration" doc:name="JSON Logger Config" doc:id="777bca42-d3fe-417d-973b-a5a6a934a060" environment="${mule.env}" disabledFields="${json.logger.disabledFields}"/>
+	<cloudhub:config name="CloudHub_Configuration" doc:name="CloudHub Config" doc:id="dce06ab6-ba29-401d-a182-aa8cbb36aee3" >
+		<cloudhub:connection username="${secure::cloudhub.username}" password="${secure::cloudhub.password}" environment="${secure::cloudhub.env_id}" />
+	</cloudhub:config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="dfcb7e5f-bb3a-4f75-a8fb-c0ece9153718" >
+		<email:smtp-connection host="${secure::email.host}" port="${secure::email.port}" user="${secure::email.username}" password="${secure::email.password}" >
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+				<email:property key="mail.smtp.ssl.trust" value="smtp.gmail.com" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	<validation:config name="Auth_Validation_Config" doc:name="Validation Config" doc:id="16c74362-6037-4475-9f44-b1869aa44390" />
+	<crypto:pgp-config name="Crypto_Pgp" doc:name="Crypto Pgp" doc:id="3be5427a-fd9f-4227-bd24-7522dba1a1f2" publicKeyring="pgp/PublicKey.asc" privateKeyring="pgp/SecretKey.asc" >
+		<crypto:pgp-key-infos >
+			<crypto:pgp-asymmetric-key-info keyId="continuum" fingerprint="0C3AC364826B0FFF" passphrase="123456789" />
+		</crypto:pgp-key-infos>
+	</crypto:pgp-config>
+	<spring:config name="Spring_Config" doc:name="Spring Config" doc:id="5d44e3c2-ecd3-414d-8a80-d6f6f6c99ae8" files="bean.xml" />
+	<spring:security-manager doc:name="Spring Security manager" doc:id="7ef858c2-0b83-47f5-8c0d-12f14b6600bb" >
+		<spring:delegate-security-provider name="Mulesoft" delegate-ref="authenticationManager" />
+	</spring:security-manager>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="d500c842-0412-4de1-a60b-be92ba717291" file="configuration\continuum-secure-salesforce-phi-sys-api-qa.yaml" key="${secure.key}" fileLevelEncryption="true" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+
+</mule>

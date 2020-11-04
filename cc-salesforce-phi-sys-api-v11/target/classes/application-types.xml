@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="input" format="java">
+      <types:shape format="java" element="org.mule.runtime.core.api.util.CaseInsensitiveHashMap"/>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#c6ee338a-db04-4f9b-8539-93e885a6aad6">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:attributes type="input"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

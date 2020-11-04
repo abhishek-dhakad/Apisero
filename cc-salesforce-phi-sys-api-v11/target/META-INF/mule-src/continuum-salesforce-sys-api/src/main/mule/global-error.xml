@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub"
+	xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	<error-handler name="Error_Handler">
+		<on-error-propagate type="APIKIT:BAD_REQUEST"
+			enableNotifications="true" logException="true">
+			<json-logger:logger doc:name="LOG ERROR - APIKIT_BAD_REQUEST" doc:id="98f893d9-8696-402f-b53c-2bf52e27616d" config-ref="JSON_Logger_Configuration" message="LOG ERROR - APIKIT_BAD_REQUEST" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred" doc:name="Alert message for APIKIT BAD_REQUEST" doc:id="05296db6-28a3-4bee-a0db-13a379da791d" variableName="alertMessage" />
+			<set-variable value='400' doc:name="Set Http Status" doc:id="ef867ba5-7cc5-4879-a4c8-ec0bf63b3109" variableName="httpStatus" />
+			<set-variable value="#[error.cause.message default vars.alertMessage]" doc:name="Set Error Cause" doc:id="9c0394a2-e640-4287-82b1-ebde554ed3c2" variableName="errorCause" />
+			<set-variable value="#[error.description]" doc:name="Set Error Description" doc:id="1606ba89-1854-4d4c-8409-e0aa2c093f91" variableName="errorDescription" />
+		</on-error-propagate>
+		<on-error-propagate type="APIKIT:NOT_FOUND"
+			enableNotifications="true" logException="true">
+			<json-logger:logger doc:name="LOG ERROR - APIKIT_NOT_FOUND" doc:id="556b135a-8317-4c8c-bd51-8608d5380e7e" config-ref="JSON_Logger_Configuration" message="LOG ERROR - APIKIT_NOT_FOUND" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred" doc:name="Alert message for APIKIT NOT FOUND" doc:id="a93f35b8-8670-4250-882a-2401d546e170" variableName="alertMessage" />
+			<set-variable value='404' doc:name="Set Http Status" doc:id="6250ddcd-e8dd-49df-b593-85f0cce05af3" variableName="httpStatus" />
+			<set-variable value="#[error.cause.message default vars.alertMessage]" doc:name="Set Error Cause" doc:id="7c89c8bb-590c-4d78-8eaa-8ecbe45744b8" variableName="errorCause" />
+			<set-variable value="#[error.description]" doc:name="Set Error Description" doc:id="73f698b5-d448-4e3e-89de-514b8722cbfe" variableName="errorDescription" />
+
+		</on-error-propagate>
+		<on-error-propagate
+			type="APIKIT:METHOD_NOT_ALLOWED">
+			<json-logger:logger doc:name="LOG ERROR - APIKIT_METHOD_NOT_ALLOWED" doc:id="94132eaa-24a7-4865-a18f-0fcfcd5448a9" config-ref="JSON_Logger_Configuration" message="LOG ERROR - APIKIT_METHOD_NOT_ALLOWED" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred" doc:name="Alert message for APIKIT METHOD NOT ALLOWED" doc:id="f96cd911-492b-4805-9dd3-4ac5c3f5991d" variableName="alertMessage" />
+			<set-variable value='405' doc:name="Set Http Status" doc:id="9d86b7da-7186-4d55-a068-c5ebe3a08d60" variableName="httpStatus" />
+			<set-variable value="#[error.cause.message default vars.alertMessage]" doc:name="Set Error Cause" doc:id="2994f35e-874b-49fb-8364-c582f5cf283f" variableName="errorCause" />
+			<set-variable value="#[error.description]" doc:name="Set Error Description" doc:id="12453ae0-3040-498c-9b53-ec8126bcdd94" variableName="errorDescription" />
+
+		</on-error-propagate>
+		<on-error-propagate type="APIKIT:NOT_ACCEPTABLE"
+			enableNotifications="true" logException="true">
+			<json-logger:logger doc:name="LOG ERROR - APIKIT_NOT_ACCEPTABLE" doc:id="ad9b254e-f5d3-4a10-9a47-1838f0adf678" config-ref="JSON_Logger_Configuration" message="LOG ERROR - APIKIT_METHOD_NOT_ALLOWED" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred" doc:name="Alert message for APIKIT NOT ACCEPTABLE" doc:id="53bbb2dd-4c6d-4e2c-9728-35f2f68264f2" variableName="alertMessage" />
+			<set-variable value='406' doc:name="Set Http Status" doc:id="9ca33897-6288-48a8-8ff0-5b3f6410aef1" variableName="httpStatus" />
+			<set-variable value="#[error.description]" doc:name="Set Error Description" doc:id="34571149-b41a-457f-aef6-26833b9fc85e" variableName="errorDescription" />
+			<set-variable value="#[error.cause.message default vars.alertMessage]" doc:name="Set Error Cause" doc:id="54d2ad1a-2af7-4139-bbdf-95ff61b1b5e7" variableName="errorCause" />
+
+		</on-error-propagate>
+		<on-error-propagate
+			type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+			<json-logger:logger doc:name="LOG ERROR - APIKIT_UNSUPPORTED_MEDIA_TYPE" doc:id="6f79405f-12f0-4667-9451-8383b59ad8d6" config-ref="JSON_Logger_Configuration" message="LOG ERROR - APIKIT_METHOD_NOT_ALLOWED" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred" doc:name="Alert message for APIKIT UNSUPPORTED MEDIA TYPE" doc:id="32fefdc8-6486-4146-9701-1db7b0a7ab1e" variableName="alertMessage" />
+			<set-variable value='415' doc:name="Set Http Status" doc:id="65d058fc-b855-4254-a85f-961b6c60cf31" variableName="httpStatus" />
+			<set-variable value="#[error.description]" doc:name="Set Error Description" doc:id="404f91ce-2ae0-475a-9e1f-ac7c32eaeb74" variableName="errorDescription" />
+			<set-variable value="#[error.cause.message default vars.alertMessage]" doc:name="Set Error Cause" doc:id="90ca31e3-4f21-45b1-8804-cd0809eb7ddf" variableName="errorCause" />
+
+		</on-error-propagate>
+		<on-error-propagate type="APIKIT:NOT_IMPLEMENTED"
+			enableNotifications="true" logException="true">
+			<json-logger:logger doc:name="LOG ERROR - APIKIT_NOT_IMPLEMENTED" doc:id="14640b3a-4c66-4b83-9a62-366c3319e527" config-ref="JSON_Logger_Configuration" message="LOG ERROR - APIKIT_METHOD_NOT_ALLOWED" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred" doc:name="Alert message for APIKIT NOT IMPLEMENTED" doc:id="357172f8-210d-481a-849a-33ba01c1bc66" variableName="alertMessage" />
+			<set-variable value='501' doc:name="Set Http Status" doc:id="143fd3cb-0ac6-4b08-bbac-5ab35bad44d6" variableName="httpStatus" />
+			<set-variable value="#[error.description]" doc:name="Set Error Description" doc:id="a634a606-b4e6-46c0-b78e-f21b08120d26" variableName="errorDescription" />
+			<set-variable value="#[error.cause.message default vars.alertMessage]" doc:name="Set Error Cause" doc:id="2319cf20-815e-45c2-b8ff-759f8e586055" variableName="errorCause" />
+		</on-error-propagate>
+		
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="8c6e5620-2a50-4898-b745-36232a9791e0" type="VALIDATION:INVALID_BOOLEAN, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+			<json-logger:logger doc:name="LOG ERROR - VALIDATION" doc:id="35660c61-b13a-43ae-a769-16363f2a8484" config-ref="JSON_Logger_Configuration" message="LOG ERROR - VALIDATION" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred" doc:name="Alert message for VALIDATION" doc:id="8ca38ac2-db6a-40d9-8e4f-3a3802f0100a" variableName="alertMessage" />
+			<set-variable value='401' doc:name="Set Http Status" doc:id="df562ddf-9929-4bd1-84ca-cf52e008453f" variableName="httpStatus" />
+			<set-variable value="#[error.description]" doc:name="Set Error Description" doc:id="58700dd5-fd71-4067-a2bc-161ed69a67f9" variableName="errorDescription" />
+			<set-variable value="#[error.cause.message default vars.alertMessage]" doc:name="Set Error Cause" doc:id="63895e97-a73a-4399-b1ac-6f8085ddf701" variableName="errorCause" />
+		</on-error-propagate>
+		
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Propagate"
+			doc:id="7fb5b897-1664-4ceb-b30e-994e4ad66807"
+			type="HTTP:CONNECTIVITY">
+			<json-logger:logger doc:name="LOG ERROR - HTTP_CONNECTIVITY" doc:id="47d8024f-66a6-4039-b8ee-d86ef72b54ac" config-ref="JSON_Logger_Configuration" message="LOG ERROR - HTTP_FORBIDDEN" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred"
+				doc:name="Alert message for HTTP Connectivity error"
+				doc:id="b96391c2-6d08-4cb2-95b4-75e05657a91e"
+				variableName="alertMessage" />
+			<set-variable
+				value='404'
+				doc:name="Set Http Status"
+				doc:id="ea7ec181-5da6-4781-94b9-27729402231d"
+				variableName="httpStatus" />
+			<set-variable value="#[error.description]"
+				doc:name="Set Error Description"
+				doc:id="c561de5f-13a0-48d6-a3ac-38d7f2a3c9fd"
+				variableName="errorDescription" />
+			<set-variable
+				value="#[error.cause.message default vars.alertMessage]"
+				doc:name="Set Error Cause"
+				doc:id="2fb0a5f9-9659-4851-b61d-509abba6a7ce"
+				variableName="errorCause" />
+
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Propagate"
+			doc:id="468b5bac-59fe-49ae-8e0a-0bba3c62c62c" type="HTTP:FORBIDDEN">
+			<json-logger:logger doc:name="LOG ERROR - HTTP_FORBIDDEN" doc:id="23c367eb-87a2-4733-9927-fef06c06dfca" config-ref="JSON_Logger_Configuration" message="LOG ERROR - HTTP_METHOD_NOT_ALLOWED" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred"
+				doc:name="Alert message for HTTP Forbidden error"
+				doc:id="f3c7f4ac-54a0-479c-aa7d-5633db306f95"
+				variableName="alertMessage" />
+			<set-variable
+				value='403'
+				doc:name="Set Http Status"
+				doc:id="2716cb8a-2625-4f12-8251-3dc30036c9fd"
+				variableName="httpStatus" />
+			<set-variable value="#[error.description]"
+				doc:name="Set Error Description"
+				doc:id="4f3defae-577f-40f5-9555-19227dbe7823"
+				variableName="errorDescription" />
+			<set-variable value="#[error.cause.message default '']"
+				doc:name="Set Error Cause"
+				doc:id="daa7f2ed-8363-4a99-8fe8-fac9a83c149b"
+				variableName="errorCause" />
+
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Propagate"
+			doc:id="4e719fd7-aede-4650-a64a-7a3b49422097"
+			type="HTTP:SERVICE_UNAVAILABLE">
+			<json-logger:logger doc:name="LOG ERROR - HTTP_SERVICE_UNAVAILABLE" doc:id="6f9d1f9a-5ea0-4e74-ad1d-ebdf7af639e9" config-ref="JSON_Logger_Configuration" message="LOG ERROR - HTTP_SERVICE_UNAVAILABLE" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred"
+				doc:name="Alert message for HTTP Service Unavailable error"
+				doc:id="caab0d4c-772b-4672-8192-2abb819d61d6"
+				variableName="alertMessage" />
+			<set-variable
+				value='503'
+				doc:name="Set Http Status"
+				doc:id="28403fdb-8a58-49cb-803d-5bddc7cce269"
+				variableName="httpStatus" />
+			<set-variable value="#[error.description]"
+				doc:name="Set Error Description"
+				doc:id="6ae0ca5c-b4d3-430e-811a-7bd8642e5de6"
+				variableName="errorDescription" />
+			<set-variable value="#[error.cause.message default '']"
+				doc:name="Set Error Cause"
+				doc:id="d5c7ae44-bb71-44b1-9c11-1100333b4555"
+				variableName="errorCause" />
+
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Propagate"
+			doc:id="9d6eb69d-7500-4c1a-bdad-4c3cd728eed3" type="HTTP:TIMEOUT">
+			<json-logger:logger doc:name="LOG ERROR - HTTP_TIMEOUT" doc:id="517910af-a905-435e-92dd-9b8cee69dbfa" config-ref="JSON_Logger_Configuration" message="LOG ERROR - HTTP_TIMEOUT" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred"
+				doc:name="Alert message for HTTP Timeout error"
+				doc:id="02828f20-25b6-4f88-a2c3-66b65fe7d81f"
+				variableName="alertMessage" />
+			<set-variable
+				value='408'
+				doc:name="Set Http Status"
+				doc:id="6efcd406-1eca-4f63-bb31-4cecb38fba86"
+				variableName="httpStatus" />
+			<set-variable value="#[error.description]"
+				doc:name="Set Error Description"
+				doc:id="fefa77ba-6ecb-4236-ac8e-d07bbfac5a8e"
+				variableName="errorDescription" />
+			<set-variable
+				value="#[error.cause.message default vars.alertMessage]"
+				doc:name="Set Error Cause"
+				doc:id="f3a6b85b-d42d-430f-b5d5-c5184ba8da33"
+				variableName="errorCause" />
+
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Propagate"
+			doc:id="a685f51e-ab2e-4de0-acbf-f40b36af57e5"
+			type="HTTP:UNAUTHORIZED">
+			<json-logger:logger doc:name="LOG ERROR - HTTP_UNAUTHORIZED" doc:id="692ffc1a-1aa3-43d8-85b4-98951fd8e30a" config-ref="JSON_Logger_Configuration" message="LOG ERROR - HTTP_UNAUTHORIZED" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred"
+				doc:name="Alert message for HTTP Unauthorized error"
+				doc:id="ea1a90f8-552d-42ac-b311-354c0c62a651"
+				variableName="alertMessage" />
+			<set-variable
+				value='401'
+				doc:name="Set Http Status"
+				doc:id="ac053b3d-e60b-4aa4-aaa2-68615159873e"
+				variableName="httpStatus" />
+			<set-variable value="#[error.description]"
+				doc:name="Set Error Description"
+				doc:id="0cb33257-ade5-410f-9c63-9d3e4eea8058"
+				variableName="errorDescription" />
+			<set-variable value="#[error.cause.message default '']"
+				doc:name="Set Error Cause"
+				doc:id="93895a91-736d-41c2-8e03-d384a4fb83ac"
+				variableName="errorCause" />
+			<!-- <flow-ref doc:name="tx-control-sys-api-Error-sub-flow" doc:id="9e96d343-26b5-4251-9ecb-ff082e392f85" 
+				name="tx-control-sys-api-Error-sub-flow"/> -->
+		</on-error-propagate>
+
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Propagate"
+			doc:id="781ffef6-09d5-4e78-8ad8-fbf7dae565c5" type="HTTP:BAD_REQUEST">
+			<json-logger:logger doc:name="LOG ERROR - HTTP_BAD_REQUEST" doc:id="aa6bce73-5f30-4af0-bac5-be5b4b04efa3" config-ref="JSON_Logger_Configuration" message="LOG ERROR - HTTP_BAD_REQUEST" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred"
+				doc:name="Alert message for HTTP bad request error"
+				doc:id="58f9d3a8-e1aa-433c-93ac-e1f50ea2fb74"
+				variableName="alertMessage" />
+			<set-variable
+				value='400'
+				doc:name="Set Http Status"
+				doc:id="bd91b246-c766-404c-ad4a-bec976aae8a6"
+				variableName="httpStatus" />
+			<set-variable value="#[error.description]"
+				doc:name="Set Error Description"
+				doc:id="cf1b3f1c-2958-49d5-a466-d144db69cab8"
+				variableName="errorDescription" />
+			<set-variable
+				value="#[error.cause.message default vars.alertMessage]"
+				doc:name="Set Error Cause"
+				doc:id="3ed76e5b-b323-4b7a-ac54-0c6487f5b50f"
+				variableName="errorCause" />
+			<!-- <flow-ref doc:name="tx-control-sys-api-Error-sub-flow" doc:id="f91c22b7-1762-40fc-abf1-4142e48a92b3" 
+				name="tx-control-sys-api-Error-sub-flow"/> -->
+		</on-error-propagate>
+			
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Propagate"
+			doc:id="91d8f633-2bba-4532-b27d-17cfac447873"
+			type="SALESFORCE:CONNECTIVITY, SALESFORCE:INVALID_INPUT, SALESFORCE:INVALID_RESPONSE, SALESFORCE:LIMIT_EXCEEDED, SALESFORCE:MUTUAL_AUTHENTICATION_FAILED, SALESFORCE:NOT_FOUND, SALESFORCE:TIMEOUT">
+			<json-logger:logger doc:name="LOG ERROR - SFTP_ERROR" doc:id="5a7e099f-5e29-4751-b7d3-4a27247ac032" config-ref="JSON_Logger_Configuration" message="LOG ERROR - SFTP_ERROR" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred"
+				doc:name="Alert Message for Salesforce errors"
+				doc:id="7b5bf4cf-4d18-4aa3-8fe2-8bfa783ed975"
+				variableName="alertMessage" />
+			<set-variable
+				value='500'
+				doc:name="Set Http Status"
+				doc:id="d21d9148-5736-4a41-b1a6-bb66304220ca"
+				variableName="httpStatus" />
+			<set-variable value="#[error.description]"
+				doc:name="Set Error Description"
+				doc:id="998deda5-8ed9-4cd6-a411-cdaf994f3c5d"
+				variableName="errorDescription" />
+			<set-variable value="#[error.cause.message default '']"
+				doc:name="Set Error Cause"
+				doc:id="c4edf4ec-a748-4e5c-98b2-adecfd8866fe"
+				variableName="errorCause" />
+		</on-error-propagate>
+		
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Propagate"
+			doc:id="34b0d2d9-4a38-47b5-960f-3c2ad279f544" type="ANY">
+			<json-logger:logger doc:name="LOG ERROR - ANY_ERROR" doc:id="5e76d40f-4ce7-4758-b961-8e6b64aebb49" config-ref="JSON_Logger_Configuration" message="LOG ERROR - ANY_ERROR" tracePoint="EXCEPTION" category="com.mulesoft.logging.jsonlogger">
+				<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+			</json-logger:logger>
+			<set-variable value="Error occurred"
+				doc:name="Alert Message for Any other type errors"
+				doc:id="a0feebc1-4617-41f1-a26f-62f0d8c2e3a5"
+				variableName="alertMessage" />
+			<set-variable
+				value='500'
+				doc:name="Set Http Status"
+				doc:id="169c091a-28b2-4a99-99d3-81132c0ac40a"
+				variableName="httpStatus" />
+			<set-variable value="#[error.description]"
+				doc:name="Set Error Description"
+				doc:id="8052049c-4e92-4ffe-9ad4-5db791104698"
+				variableName="errorDescription" />
+			<set-variable
+				value="#[error.cause.message default vars.alertMessage]"
+				doc:name="Set Error Cause"
+				doc:id="a11f3736-95f1-4166-a5d9-740916ac6c08"
+				variableName="errorCause" />
+			<!-- <flow-ref doc:name="alert-notification-sub-flow" doc:id="b443bf70-7a3c-49ad-9d36-2ea51fe0199b" 
+				name="alert-notification-sub-flow" /> -->
+		</on-error-propagate>
+		
+
+
+	
+</error-handler>
+	<sub-flow name="notification-type-subflow" doc:id="529ff5b2-3446-4bab-a44f-268405383924" >
+		<choice doc:name="Choice For Notification" doc:id="21b2093e-6dab-467d-b828-0982f8489472" >
+			<when expression="#[p('notification.custom_alert') == &quot;true&quot;]" >
+				<ee:transform doc:name="DW Error Mapping" doc:id="4c8ae6b4-21a3-4814-ae64-f52691a312ca" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"errorDescription" : vars.errorDescription,
+	"errorCause" : vars.errorCause,
+	"errorCode" : vars.httpStatus,
+	"timeStamp" : now(),
+	"transactionId": correlationId
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<parse-template doc:name="Parse Email Template" doc:id="33681504-5654-41c4-8972-d8e229bc8a88" location="emailTemplate.html" target="emailTemplate" targetValue="#[payload]" />
+				<email:send doc:name="Send Email" doc:id="8213b125-df83-45ef-aa6c-773ae0d02927" config-ref="Email_SMTP" subject="Error-Notification" >
+					<email:to-addresses >
+						<email:to-address value="dinesh.sankaran@apisero.com" />
+						<email:to-address value="abhishek.dhakad@apisero.com" />
+					</email:to-addresses>
+					<email:body contentType="text/html" >
+						<email:content ><![CDATA[#[vars.emailTemplate]]]></email:content>
+					</email:body>
+				</email:send>
+				<json-logger:logger doc:name="LOG INFO - Mail Notification Triggered" doc:id="5c70a367-acf4-4540-959a-257fc04002b4" config-ref="JSON_Logger_Configuration" message="Mail Notification Triggered" tracePoint="AFTER_REQUEST" >
+					<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+				</json-logger:logger>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="DW Error Mapping" doc:id="b0dd3774-01bc-435f-a9b6-b4f595ba2571" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"errorDescription" : vars.errorDescription,
+	"errorCause" : vars.errorCause,
+	"errorCode" : vars.httpStatus,
+	"timeStamp" : now(),
+	"transactionId": correlationId
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<cloudhub:create-notification domain="continuum-salesforce-sys-api" doc:name="Create Notification" doc:id="13d3b426-3043-4112-b347-6c8dcc68090a" config-ref="CloudHub_Configuration" >
+					<cloudhub:message ><![CDATA[#[vars.alertMessage]]]></cloudhub:message>
+					<cloudhub:custom-properties ><![CDATA[#[payload]]]></cloudhub:custom-properties>
+				</cloudhub:create-notification>
+				<json-logger:logger doc:name="LOG INFO - Alert Notification Triggered" doc:id="dc102427-595c-4648-851d-b793ec8c98c4" config-ref="JSON_Logger_Configuration" message="Alert Notification Triggered" tracePoint="AFTER_REQUEST" >
+					<json-logger:content ><![CDATA[#[output application/json
+---
+payload]]]></json-logger:content>
+				</json-logger:logger>
+			</otherwise>
+		</choice>
+	</sub-flow>
+
+
+
+</mule>

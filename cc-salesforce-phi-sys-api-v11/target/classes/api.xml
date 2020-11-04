@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:spring="http://www.mulesoft.org/schema/mule/spring" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:crypto="http://www.mulesoft.org/schema/mule/crypto" xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/crypto http://www.mulesoft.org/schema/mule/crypto/current/mule-crypto.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd">
+	<flow name="continuum-salesforce-sys-api-main">
+        <http:listener config-ref="HTTPS_Listener_Configuration" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <validation:is-true doc:name="Is true" doc:id="42b94e0f-44ba-4579-88f2-711221922721" config-ref="Auth_Validation_Config" message='"Invalid Authentication"' expression='#[message.attributes.headers.client_id == p("secure::auth.client_id") and message.attributes.headers.client_secret == p("secure::auth.client_secret") ]'/>
+		<apikit:router config-ref="cc-salesforce-phi-system-api-config" />
+		<error-handler ref="Error_Handler"/>
+    </flow>
+    <flow name="continuum-salesforce-sys-api-console">
+        <http:listener config-ref="HTTPS_Listener_Configuration" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="cc-salesforce-phi-system-api-config"/>
+    </flow>
+    <flow name="get:\sf_query\integration_mapping:cc-salesforce-phi-system-api-config">
+		<ee:transform doc:name="DW For Converting The Binary Data To PGP Data" doc:id="9685cd26-de91-41bd-9fd3-0da19deb06ad" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Binaries
+output application/java
+---
+fromBase64(attributes.queryParams.protocol_group_ids)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<crypto:pgp-decrypt doc:name="Pgp decrypt" doc:id="6694d0c9-3cba-4bec-9a2a-f94509938012" config-ref="Crypto_Pgp">
+		</crypto:pgp-decrypt>
+		<flow-ref doc:name="Refer-To-Salesforce-Query-Integration-Mapping-Flow" doc:id="31eadc0a-da3f-4d3c-8a6e-af795f71dd85" name="salesforce-query-integration-mapping-flow"/>
+		<crypto:pgp-encrypt doc:name="Pgp encrypt" doc:id="1bd20409-b14f-4e01-af2d-e4c9b55e9c52" config-ref="Crypto_Pgp" keyId="continuum" />
+		<ee:transform doc:name="DW For Mapping PGP Data In Json" doc:id="96aae18a-83ba-4aec-aa34-87070d536219" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[output application/json
+---
+{
+	encrypted_data : payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+	<flow name="get:\sf_query\protocol_group:cc-salesforce-phi-system-api-config" doc:id="a9d0b78b-3d39-4809-b239-27b2594b9960" >
+		<flow-ref doc:name="Refer-To-Salesforce-Query-Protocol-Group-Flow" doc:id="c4c71455-fc21-4db3-a719-5cf3abe4ed6d" name="salesforce-query-protocol-group-flow" />
+		<crypto:pgp-encrypt doc:name="Pgp encrypt" doc:id="fc7e2b82-b7eb-40b6-9260-aedb551333c8" config-ref="Crypto_Pgp" keyId="continuum" />
+		<ee:transform doc:name="DW For Mapping PGP Data In Json" doc:id="3fe2966b-38c0-414d-83ec-624c66834358" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[output application/json
+---
+{
+	encrypted_data : payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="post:\sf_upsert\participant_lead:application\json:cc-salesforce-phi-system-api-config">
+		<crypto:pgp-decrypt doc:name="Pgp decrypt" doc:id="b044041f-d8ff-457a-a7fa-a2cc92202de2" config-ref="Crypto_Pgp" outputMimeType="application/json">
+		</crypto:pgp-decrypt>
+		<logger level="INFO" doc:name="Logger" doc:id="ffb861aa-4d61-421d-8fad-cacf55a7d0d3" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="4862777b-9a2f-42de-8fa3-49df8754f4c3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+fun javaDateValue(inputValue) = 
+	if ((typeOf(inputValue) as String) == "String")
+		((inputValue as LocalDateTime {format: "yyyy-MM-dd'T'HH:mm:ss.SSS"}) default (inputValue as Date {format: "yyyy-MM-dd"}) default inputValue) 
+	else
+		inputValue
+---
+payload map (
+	$ mapObject {
+		($$) : javaDateValue($)
+	}
+)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="265acf38-6439-4a5d-9eaa-523b3159c65c" message="#['Here comes the payload 1: ' ++ write(payload)]" />
+		<flow-ref doc:name="Refer-To-Salesforce-Upsert-Flow" doc:id="cfd9a1ed-3ca7-402e-b35f-05c4cff85330" name="salesforce-upsert-flow" />
+    </flow>
+    <flow name="get:\sf_query\partner\participant-lead:cc-salesforce-phi-system-api-config">
+        <logger level="INFO" doc:name="LOG INFO - START" doc:id="17f9962c-e26b-4996-8c86-aed4471a30e9" message="Starting Salesforce System API For Querying Data In Participant Lead " />
+		<flow-ref doc:name="Refer-To-get-partner-participant-lead" doc:id="34e80fdb-f122-4344-945f-5f8d076c2ff8" name="get-partner-participant-lead"/>
+		<logger level="INFO" doc:name="LOG INFO - END" doc:id="db715ed8-05f8-46ca-82b5-316204b8993b" message="Ending Salesforce System API For Querying Data In Participant Lead " />
+    </flow>
+	<flow name="post:\sf_upsert\partner\participant_lead:application\json:cc-salesforce-phi-system-api-config">
+		<logger level="INFO" doc:name="LOG INFO - START" doc:id="612b3ff9-7721-4664-9818-bb432a5ea944" message="Starting Salesforce System API For Upserting Data In Participant Lead " />
+		<flow-ref doc:name="Refer-To-update-partner-participant-lead" doc:id="226deb73-fcbe-40b8-916c-5e2f4efc7921" name="update-partner-participant-lead"/>
+		<logger level="INFO" doc:name="LOG INFO - END" doc:id="2f391842-2781-4754-b11e-e7cc194263c9" message="Ending Salesforce System API For Upserting Data In Participant Lead " />
+    </flow>
+</mule>

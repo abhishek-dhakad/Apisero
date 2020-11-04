@@ -1,0 +1,40 @@
+https: 
+  private:
+    port: "8092"
+  tls:
+    keyPassword: "pa$$w0rd"
+    password: "pa$$w0rd"
+
+pgp:
+  key:
+    fingerprint: "0C3AC364826B0FFF"
+    passphrase: "123456789"
+  
+reconnection:
+  frequency: "5000"
+  attempts: "3"
+
+sfdc:
+  phi:
+    consumerkey: "3MVG9ysJNY7CaIHlhRuT.GB0Zk7xX3S95FP8ZcKMnm.._pcrVFQWaQAP97RSW3_zvKkW40xA997YgT9mSOHE9"
+    keystorepassword: "devphicc0"
+    principal: "development@continuumclinical.com.phi.staging"
+    token: "https://test.salesforce.com/services/oauth2/token"
+    
+notification:
+  custom_alert: "false"
+
+auth:
+  client_id: "OfeubieIUBjnjnCRTrtweytkmlJKCFXEREnlnCtrrgihulvcxdv"
+  client_secret: "NdW98hfinIUB87r32buGIoCUbiudwqYEDRXRghbRdPigaZsbqi"
+  
+email:
+  host: "bluechipww-com.mail.protection.outlook.com"
+  port: "25"
+  username: "dwolinsky@continuumclinical.com"
+  password: "Automation3"
+  
+cloudhub:
+  username: "danwolinsky"
+  password: "Automation3"
+  env_id: "28085331-0552-48d4-aad4-57e580ff0428"
